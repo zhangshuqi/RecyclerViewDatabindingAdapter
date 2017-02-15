@@ -210,11 +210,12 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
             throw new NullPointerException("BaseDataBindingAdapter  itemData is null");
         }
         // 分配数据
-      //  holder.getBinding().setVariable(android.zsq.com.databindingadapter.BR.item, data);
+        holder.getBinding().setVariable(BR.item, data);
+        holder.getBinding().setVariable(BR.itemPosition, position);
         holder.getBinding().executePendingBindings();
         //分配事件
-        if (mPresenter != null){
-            //   holder.getBinding().setVariable(android.zsq.com.databindingadapter.BR.presenter, mPresenter);
+        if (mPresenter != null) {
+            holder.getBinding().setVariable(BR.presenter, mPresenter);
         }
     }
 

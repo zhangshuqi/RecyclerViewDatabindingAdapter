@@ -29,11 +29,11 @@ public abstract class BaseDataBindingAdapter<T> extends RecyclerView.Adapter<Bin
         }
         T data = mData.get(position);
         // 分配数据
-       // holder.getBinding().setVariable(android.zsq.com.databindingadapter.BR.item, data);
+        holder.getBinding().setVariable(BR.item, data);
         //分配事件
         if (mPresenter != null)
-          //  holder.getBinding().setVariable(android.zsq.com.databindingadapter.BR.presenter, mPresenter);
-     //   holder.getBinding().setVariable(android.zsq.com.databindingadapter.BR.itemPosition, position);
+           holder.getBinding().setVariable(BR.presenter, mPresenter);
+        holder.getBinding().setVariable(BR.itemPosition, position);
         holder.getBinding().executePendingBindings();
         if (decorator != null)
             decorator.decorator(holder, position, getItemViewType(position));
