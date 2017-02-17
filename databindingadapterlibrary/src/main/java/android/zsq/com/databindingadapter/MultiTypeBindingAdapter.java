@@ -3,7 +3,9 @@ package android.zsq.com.databindingadapter;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.support.v4.util.ArrayMap;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.ViewGroup;
 
 
@@ -143,7 +145,7 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
         return false;
     }
 
-    private boolean isFooterView(int position) {
+    public boolean isFooterView(int position) {
         if (footKeyList == null || footKeyList.size() == 0) {
             return false;
         } else if (footKeyList.size() == 0) {
@@ -227,6 +229,34 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
             return footKeyList.get(position - getHeadAndItemCount());
         }
         return getMyItemViewType(position, multiTypeMap);
+    }
+    // 解决gridmanager 的head 问题
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        RecyclerView.LayoutManager manager = recyclerView.getLayoutManager();
+        if (manager instanceof GridLayoutManager) {
+            final GridLayoutManager gridManager = ((GridLayoutManager) manager);
+            gridManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    return isHeaderView(position) || isFooterView(position)
+                            ? gridManager.getSpanCount() : 1;
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
+        if (lp != null
+                && lp instanceof StaggeredGridLayoutManager.LayoutParams
+                && holder.getLayoutPosition() == 0) {
+            StaggeredGridLayoutManager.LayoutParams p = (StaggeredGridLayoutManager.LayoutParams) lp;
+            p.setFullSpan(true);
+        }
     }
 
     public int getMyItemViewType(int position, ArrayMap<Integer, Integer> multiTypeMap) {
