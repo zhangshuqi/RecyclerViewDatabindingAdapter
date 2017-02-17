@@ -1,6 +1,6 @@
 # RecyclerViewDatabindingAdapter
 
-# Step 1.JitPack库添加到你的构建文件
+# Step 1.将JitPack库添加到project gradle 的依赖当中
   <pre>allprojects {
 		repositories {
 			maven { url 'https://jitpack.io' }
