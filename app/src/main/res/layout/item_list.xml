@@ -2,7 +2,7 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
     <data>
         <variable
-            name="item"
+            name="itemData"
             type="android.zsq.com.recyclerviewdatabindingadapter.ListViewHolder"></variable>
         <variable
             name="itemPosition"
@@ -24,7 +24,7 @@
                 android:id="@+id/tv_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{item.name}"
+                android:text="@{itemData.name}"
                 android:textColor="#202020"
                 android:textSize="20sp" />
 
@@ -32,7 +32,7 @@
                 android:id="@+id/tv_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{item.time}"
+                android:text="@{itemData.time}"
                 android:textColor="#256324"
                 android:textSize="20sp" />
 

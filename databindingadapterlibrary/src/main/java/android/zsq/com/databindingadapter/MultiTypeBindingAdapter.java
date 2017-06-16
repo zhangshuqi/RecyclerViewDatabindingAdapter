@@ -2,12 +2,10 @@ package android.zsq.com.databindingadapter;
 
 import android.content.Context;
 import android.databinding.DataBindingUtil;
+import android.databinding.ViewDataBinding;
 import android.support.v4.util.ArrayMap;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.view.View;
 import android.view.ViewGroup;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,18 +16,27 @@ import java.util.Set;
  * Created by Administrator on 2017/2/10 0010.
  */
 
-public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
+public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
     public static final int ITEM_VIEW_NORMAL_TYPE = 10000;
     protected ArrayMap<Integer, Integer> multiTypeMap;
+    protected ArrayMap<Integer, BindingViewHolder> multiTypeFootHolderMap;
+    protected ArrayMap<Integer, BindingViewHolder> multiTypeHeadHolderMap;
     public List<Integer> headKeyList;
     private ArrayList headDataList;
     private ArrayList<Integer> footKeyList;
     private ArrayList footDataList;
+    private AdapterTypeConfig footAdapterTypeConfig;
+
+    public MultiTypeBindingAdapter(Context context) {
+        super(context);
+    }
 
     public MultiTypeBindingAdapter(Context context, List data) {
         super(context);
-        mData = data;
-        multiTypeMap = new ArrayMap<>();
+        if (data == null) {
+            data = new ArrayList();
+        }
+        init(data);
     }
 
     /**
@@ -37,10 +44,20 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
      */
     public MultiTypeBindingAdapter(Context context, List data, int itemDataRes) {
         super(context);
-        mData = data;
-        multiTypeMap = new ArrayMap<>();
+        if (data == null) {
+            data = new ArrayList();
+        }
+        init(data);
         multiTypeMap.put(ITEM_VIEW_NORMAL_TYPE, itemDataRes);
     }
+
+    private void init(List data) {
+        mData = data;
+        multiTypeMap = new ArrayMap<>();
+        multiTypeFootHolderMap = new ArrayMap<>();
+        multiTypeHeadHolderMap = new ArrayMap<>();
+    }
+
 
     public interface AdapterTypeConfig {
         Map<Integer, Integer> getTypeConfigKeyAndRes();
@@ -98,6 +115,7 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
         if (footDataList == null) {
             footDataList = new ArrayList();
         }
+        this.footAdapterTypeConfig = config;
         Set<Integer> keySet = config.getTypeConfigKeyAndRes().keySet();
         for (Integer key : keySet
                 ) {
@@ -125,15 +143,22 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
         if (footKeyList == null) {
             footKeyList = new ArrayList();
         }
-        footDataList.add(footData);
+        if (footData != null) {
+            footDataList.add(footData);
+        }
         footKeyList.add(footKey);
         multiTypeMap.put(footKey, footRes);
+    }
+
+    public void removeFootViewForFootKey(int footKey) {
+        footKeyList.remove(footKey);
+        multiTypeMap.remove(footKey);
     }
 
     public void setItemViewRes(int itemRes) {
         multiTypeMap.put(ITEM_VIEW_NORMAL_TYPE, itemRes);
     }
-
+    @Override
     public boolean isHeaderView(int position) {
         if (headKeyList == null || headKeyList.size() == 0) {
             return false;
@@ -144,7 +169,7 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
         }
         return false;
     }
-
+    @Override
     public boolean isFooterView(int position) {
         if (footKeyList == null || footKeyList.size() == 0) {
             return false;
@@ -152,13 +177,10 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
             return false;
         }
         int count = getHeadAndItemCount();
-        if (position >= count && position <= getItemCount()) {
-            return true;
-        }
-        return false;
+        return position >= count && position <= getItemCount();
     }
-
-    private int getHeadAndItemCount() {
+    @Override
+    protected int getHeadAndItemCount() {
         int count = getHeadCount();
         if (mData != null || mData.size() != 0) {
             count += mData.size();
@@ -173,10 +195,10 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
 
     @Override
     public int getItemCount() {
-        if (mData == null || mData.size() == 0) {
-            return 0;
+        int count = 0;
+        if (mData != null && mData.size() != 0) {
+            count = mData.size();
         }
-        int count = mData.size();
         if (headKeyList != null && headKeyList.size() != 0) {
             count += headKeyList.size();
         }
@@ -186,38 +208,64 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
         return count;
     }
 
+
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public BindingViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if (getLayoutRes(viewType) <= 0)
             throw new NullPointerException("onCreateViewHolder layout res is null");
         return new BindingViewHolder(DataBindingUtil.inflate(mLayoutInflater, getLayoutRes(viewType), parent, false));
     }
 
     @Override
-    public void onBindViewHolder(BindingViewHolder holder, int position) {
+    public void onBindViewHolder(BindingViewHolder holder, final int position) {
         if (mData == null) {
             throw new NullPointerException("BaseDataBindingAdapter  data is null");
         }
         Object data = null;
+        ViewDataBinding binding = holder.getBinding();
+        int itemViewType = getItemViewType(position);
         if (isHeaderView(position)) {
+            if (headDataList == null || headDataList.size() == 0) return;
             data = headDataList.get(position);
+            if (headDecorator != null)
+                headDecorator.decorator(holder, position, itemViewType, data);
+            if (headPresenter != null)
+                binding.setVariable(BR.presenter, headPresenter);
+            multiTypeHeadHolderMap.put(itemViewType,holder);
         } else if (isFooterView(position)) {
+            if (footDataList == null || footDataList.size() == 0) return;
             data = footDataList.get(position - getHeadAndItemCount());
+            if (footPresenter != null)
+                binding.setVariable(BR.presenter, footPresenter);
+            if (footDecorator != null) {
+                footDecorator.decorator(holder, position - getHeadAndItemCount(), itemViewType, data);
+            }
+            multiTypeFootHolderMap.put(itemViewType, holder);
         } else {
             data = mData.get(position - getHeadCount());
-            if (decorator != null)
-                decorator.decorator(holder, position - getHeadCount(), getItemViewType(position));
+            if (itemDecorator != null)
+                itemDecorator.decorator(holder, position - getHeadCount(), itemViewType, data);
+            if (mPresenter != null) {
+                binding.setVariable(BR.presenter, mPresenter);
+            }
         }
         if (data == null) {
             throw new NullPointerException("BaseDataBindingAdapter  itemData is null");
         }
         // 分配数据
-        holder.getBinding().setVariable(BR.item, data);
-        holder.getBinding().setVariable(BR.itemPosition, position);
-        holder.getBinding().executePendingBindings();
+        binding.setVariable(BR.itemData, data);
+        binding.setVariable(BR.itemPosition, position);
+
         //分配事件
-        if (mPresenter != null) {
-            holder.getBinding().setVariable(BR.presenter, mPresenter);
+        binding.executePendingBindings();
+        if (canLongClick) {
+            holder.getBinding().getRoot().setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    itemLongPresenter.onItemLongClick(position, mData.get(position));
+                    return canLongClick;
+                }
+            });
         }
     }
 
@@ -230,34 +278,7 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
         }
         return getMyItemViewType(position, multiTypeMap);
     }
-    // 解决gridmanager 的head 问题
-    @Override
-    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
-        super.onAttachedToRecyclerView(recyclerView);
-        RecyclerView.LayoutManager manager = recyclerView.getLayoutManager();
-        if (manager instanceof GridLayoutManager) {
-            final GridLayoutManager gridManager = ((GridLayoutManager) manager);
-            gridManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-                @Override
-                public int getSpanSize(int position) {
-                    return isHeaderView(position) || isFooterView(position)
-                            ? gridManager.getSpanCount() : 1;
-                }
-            });
-        }
-    }
 
-    @Override
-    public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
-        super.onViewAttachedToWindow(holder);
-        ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
-        if (lp != null
-                && lp instanceof StaggeredGridLayoutManager.LayoutParams
-                && holder.getLayoutPosition() == 0) {
-            StaggeredGridLayoutManager.LayoutParams p = (StaggeredGridLayoutManager.LayoutParams) lp;
-            p.setFullSpan(true);
-        }
-    }
 
     public int getMyItemViewType(int position, ArrayMap<Integer, Integer> multiTypeMap) {
         return ITEM_VIEW_NORMAL_TYPE;
@@ -275,4 +296,17 @@ public class MultiTypeBindingAdapter extends BaseDataBindingAdapter {
     }
 
 
+    public AdapterTypeConfig getFootAdapterTypeConfig() {
+        return footAdapterTypeConfig;
+    }
+
+    public ArrayMap<Integer, BindingViewHolder> getMultiTypeFootHolderMap() {
+        return multiTypeFootHolderMap;
+    }
+    public <T> T  getMultiTypeFootHolder(int footResKey) {
+        if(!multiTypeFootHolderMap.containsKey(footResKey)){
+            return null;
+        }
+        return (T) multiTypeFootHolderMap.get(footResKey);
+    }
 }

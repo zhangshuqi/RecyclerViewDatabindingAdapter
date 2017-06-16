@@ -2,7 +2,7 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
 <data>
     <variable
-        name="item"
+        name="itemData"
         type="android.zsq.com.recyclerviewdatabindingadapter.ListViewHolder"></variable>
     <variable
         name="itemPosition"

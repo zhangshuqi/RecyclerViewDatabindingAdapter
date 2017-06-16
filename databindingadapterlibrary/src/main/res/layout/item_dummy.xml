@@ -7,7 +7,7 @@
             type="android.zsq.com.databindingadapter.DummyClass"/>
 
         <variable
-            name="item"
+            name="itemData"
             type="android.zsq.com.databindingadapter.DummyClass"/>
 
         <variable
