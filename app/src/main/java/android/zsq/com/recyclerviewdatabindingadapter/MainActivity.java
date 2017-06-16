@@ -61,6 +61,18 @@ public class MainActivity extends AppCompatActivity {
             Log.d("---",itemData.getName()+"-----");
          }
       });
+      adapter.setFootPresenter(new BaseBindingItemPresenter() {
+         @Override
+         public void onItemClick(Object itemData) {
+
+         }
+      });
+      adapter.setHeadPresenter(new BaseBindingItemPresenter() {
+         @Override
+         public void onItemClick(Object itemData) {
+
+         }
+      });
       //  MultiTypeBindingAdapter adapter = new MultiTypeBindingAdapter(this, data, R.layout.item_list);
       // ListViewHolder multiTypeFootHolder = adapter.<ListViewHolder>getMultiTypeFootHolder(1);
       adapter.addSingleHeaderConfig(1, R.layout.head, new ListViewHolder("2", "50"));
