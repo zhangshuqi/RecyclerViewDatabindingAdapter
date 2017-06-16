@@ -13,3 +13,7 @@
 	        compile 'com.github.zhangshuqi:RecyclerViewDatabindingAdapter:v1.0.2'
           }
      </pre>
+
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
