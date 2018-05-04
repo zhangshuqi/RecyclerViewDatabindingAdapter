@@ -5,5 +5,5 @@ package android.zsq.com.databindingadapter;
  */
 
 public  interface BaseBindingItemPresenter<T> {
-     void onItemClick(T itemData);
+     void onItemClick(int position, T itemData);
 }

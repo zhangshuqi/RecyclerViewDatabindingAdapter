@@ -1,6 +1,7 @@
 package android.zsq.com.databindingadapter;
 
 import android.content.Context;
+import android.databinding.DataBindingUtil;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -8,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,15 +26,31 @@ public abstract class BaseDataBindingAdapter<T> extends RecyclerView.Adapter<Bin
     protected BaseBindingItemPresenter headPresenter;
     protected BaseBindingItemPresenter footPresenter;
     protected BaseDataBindingDecorator footDecorator;
+    public static final int ITEM_VIEW_NORMAL_TYPE = 10001;
 
-    public BaseDataBindingAdapter(Context context) {
+    public BaseDataBindingAdapter(Context context, List mData) {
         mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mData = new ArrayList<>();
+        this.mData = mData;
+        if (mData == null)
+            this.mData = new ArrayList<>();
+        mBindingViewHolderMap = new HashMap<Integer, BindingViewHolder>();
     }
 
+    @Override
+    public BindingViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        BindingViewHolder bindingViewHolder = new BindingViewHolder(DataBindingUtil.inflate(mLayoutInflater, getLayoutRes(viewType), parent, false));
+        mBindingViewHolderMap.put(viewType, bindingViewHolder);
+        return bindingViewHolder;
+    }
 
     public interface ItemDecorator<T> {
         void decorator(BindingViewHolder holder, int position, int viewType, List<T> mData);
+    }
+
+    protected HashMap<Integer, BindingViewHolder> mBindingViewHolderMap;
+
+    public HashMap<Integer, BindingViewHolder> getBindingViewHolderMap() {
+        return mBindingViewHolderMap;
     }
 
     public void setItemPresenter(BaseBindingItemPresenter presenter) {
@@ -60,80 +78,9 @@ public abstract class BaseDataBindingAdapter<T> extends RecyclerView.Adapter<Bin
         notifyItemChanged(position, o);
     }
 
-    @Override
-    public void refresh(List newData) {
-        if (newData == null) {
-            mData.clear();
-            notifyDataSetChanged();
-            return;
-        }
-        if (mData == null) {
-            mData = newData;
-            notifyDataSetChanged();
-        } else {
-            mData.clear();
-            mData.addAll(newData);
-            notifyDataSetChanged();
-        }
-    }
 
-    public void refresh() {
-        if (mData != null && mData.size() != 0) {
-            notifyDataSetChanged();
-        }
-    }
+    public abstract int getLayoutRes(int itemViewType);
 
-
-    @Override
-    public void addAll(List newData) {
-        if (newData == null) {
-            return;
-        }
-        if (mData == null) {
-            mData = newData;
-            notifyDataSetChanged();
-        } else {
-            mData.addAll(newData);
-            notifyDataSetChanged();
-        }
-    }
-
-    @Override
-    public void clear() {
-        if (mData != null) {
-            mData.clear();
-            notifyDataSetChanged();
-        }
-    }
-
-    @Override
-    public void delete(int position) {
-        if (mData != null && position < mData.size()) {
-            mData.remove(position);
-            notifyItemRemoved(position);
-        }
-    }
-
-    @Override
-    public void add(T data) {
-        mData.add(data);
-        notifyDataSetChanged();
-    }
-
-    @Override
-    public void add(int position, T data) {
-        mData.add(position, data);
-        notifyDataSetChanged();
-        //notifyItemInserted(position);
-    }
-
-    public int getLayoutRes() {
-        return -1;
-    }
-
-    public int getLayoutRes(int itemViewType) {
-        return -1;
-    }
 
     public List<T> getListData() {
         return mData;
@@ -163,7 +110,14 @@ public abstract class BaseDataBindingAdapter<T> extends RecyclerView.Adapter<Bin
     protected abstract boolean isFooterView(int position);
 
     protected abstract boolean isHeaderView(int position);
+
     protected abstract int getHeadAndItemCount();
+
+    protected abstract int getHeadCount();
+
+    public abstract void addSingleFootConfig(int footKey, int footRes, Object footData);
+
+    public abstract void addSingleHeaderConfig(int headKey, int headRes, Object headData);
 
     @Override
     public void onViewAttachedToWindow(BindingViewHolder holder) {
@@ -200,4 +154,108 @@ public abstract class BaseDataBindingAdapter<T> extends RecyclerView.Adapter<Bin
     public void setFootDecorator(BaseDataBindingDecorator footDecorator) {
         this.footDecorator = footDecorator;
     }
+
+    @Override
+    public void refresh(List<T> newData) {
+        if (newData == null) {
+            mData.clear();
+            notifyDataSetChanged();
+            return;
+        }
+        if (mData == null) {
+            mData = newData;
+            notifyDataSetChanged();
+        } else {
+            mData.clear();
+            mData.addAll(newData);
+            notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void refresh() {
+        if (mData != null) {
+            notifyDataSetChanged();
+        }
+    }
+
+
+    @Override
+    public void addAll(List<T> newData) {
+        if (newData == null) {
+            return;
+        }
+        if (mData == null) {
+            mData = newData;
+            notifyDataSetChanged();
+        } else {
+            mData.addAll(newData);
+            notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void addAllTop(List<T> newData) {
+        if (newData == null) {
+            return;
+        }
+        if (mData == null) {
+            mData = newData;
+            notifyDataSetChanged();
+        } else {
+            mData.addAll(0, newData);
+            notifyItemRangeInserted(0, newData.size());
+        }
+    }
+
+
+    @Override
+    public void clear() {
+        if (mData != null) {
+            mData.clear();
+            notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void delete(int position) {
+        if (mData != null && position < mData.size()) {
+            mData.remove(position);
+            notifyItemRemoved(position + getHeadCount());
+            notifyItemRangeChanged(position + getHeadCount(), getItemCount());
+        }
+    }
+
+    @Override
+    public void add(T data) {
+        mData.add(data);
+        notifyItemInserted(0 + getHeadCount());
+        notifyItemRangeChanged(0, getItemCount());
+    }
+
+
+    @Override
+    public void add(int position, T data) {
+        mData.add(position, data);
+        // notifyDataSetChanged();
+        notifyItemInserted(position + getHeadCount());
+        notifyItemRangeChanged(position + getHeadCount(), getItemCount());
+    }
+
+    @Override
+    public void addLast(T data) {
+        mData.add(mData.size(), data);
+        // notifyDataSetChanged();
+        notifyItemInserted(mData.size());
+        notifyItemRangeChanged(mData.size(), getItemCount());
+    }
+
+    @Override
+    public void set(int position, T data) {
+        mData.set(position, data);
+        notifyItemInserted(position + getHeadCount());
+        notifyItemRangeChanged(position + getHeadCount(), getItemCount());
+    }
+
+
 }

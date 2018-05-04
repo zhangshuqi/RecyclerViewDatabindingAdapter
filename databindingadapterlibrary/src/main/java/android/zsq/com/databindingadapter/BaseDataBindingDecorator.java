@@ -5,5 +5,5 @@ package android.zsq.com.databindingadapter;
  */
 
 public interface BaseDataBindingDecorator<T> {
-    void decorator(BindingViewHolder holder, int position, int viewType, T mData);
+    void decorator(BindingViewHolder holder, int position, int viewType, T data);
 }

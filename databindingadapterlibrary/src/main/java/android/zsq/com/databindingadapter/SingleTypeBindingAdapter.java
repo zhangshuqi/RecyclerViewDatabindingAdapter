@@ -1,11 +1,8 @@
 package android.zsq.com.databindingadapter;
 
 import android.content.Context;
-import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
-import android.support.annotation.LayoutRes;
 import android.view.View;
-import android.view.ViewGroup;
 
 import java.util.List;
 
@@ -23,16 +20,13 @@ public class SingleTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
     private int headSingleFootRes;
     private BindingViewHolder footBindingHolder;
 
+
     public SingleTypeBindingAdapter(Context context, List data, int layoutRes) {
-        super(context);
-        mData = data;
+        super(context, data);
+
         mLayoutRes = layoutRes;
     }
 
-    @Override
-    public BindingViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new BindingViewHolder(DataBindingUtil.inflate(mLayoutInflater, getLayoutRes(), parent, false));
-    }
 
     @Override
     public void onBindViewHolder(BindingViewHolder holder, final int position) {
@@ -61,7 +55,7 @@ public class SingleTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         } else {
             data = mData.get(position - getHeadCount());
             if (itemDecorator != null)
-                itemDecorator.decorator(holder, position - getHeadCount(), itemViewType, mData);
+                itemDecorator.decorator(holder, position - getHeadCount(), itemViewType, data);
             if (mPresenter != null) {
                 binding.setVariable(BR.presenter, mPresenter);
             }
@@ -77,12 +71,18 @@ public class SingleTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         }
         // 分配数据
         holder.getBinding().setVariable(BR.itemData, data);
+        holder.getBinding().setVariable(BR.itemPosition, position);
         holder.getBinding().executePendingBindings();
     }
 
+
     @Override
-    @LayoutRes
-    public int getLayoutRes() {
+    public int getLayoutRes(int itemViewType) {
+        if (itemViewType == headSingleKey)
+            return headSingleFootRes;
+        if (itemViewType == footSingleKey) {
+            return footSingleFootRes;
+        }
         return mLayoutRes;
     }
 
@@ -118,14 +118,16 @@ public class SingleTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         return count;
     }
 
-    private int getHeadCount() {
+    @Override
+    public int getHeadCount() {
         int count = 0;
-        if (headSingleData != null && headSingleKey > 0 && footSingleFootRes > 0) {
+        if (headSingleData != null && headSingleKey > 0 && headSingleFootRes > 0) {
             count++;
         }
         return count;
     }
 
+    @Override
     public void addSingleFootConfig(int footKey, int footRes, Object footData) {
         footSingleKey = footKey;
         footSingleFootRes = footRes;
@@ -135,6 +137,7 @@ public class SingleTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         footSingleFootData = footData;
     }
 
+    @Override
     public void addSingleHeaderConfig(int headKey, int headRes, Object headData) {
         headSingleKey = headKey;
         headSingleFootRes = headRes;
@@ -151,5 +154,16 @@ public class SingleTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
             size = size + 1;
         }
         return size;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (isHeaderView(position))
+            return headSingleKey;
+        if (isFooterView(position)) {
+            return footSingleKey;
+        }
+
+        return ITEM_VIEW_NORMAL_TYPE;
     }
 }

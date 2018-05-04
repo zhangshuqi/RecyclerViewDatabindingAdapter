@@ -17,7 +17,6 @@ import java.util.Set;
  */
 
 public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
-    public static final int ITEM_VIEW_NORMAL_TYPE = 10000;
     protected ArrayMap<Integer, Integer> multiTypeMap;
     protected ArrayMap<Integer, BindingViewHolder> multiTypeFootHolderMap;
     protected ArrayMap<Integer, BindingViewHolder> multiTypeHeadHolderMap;
@@ -28,31 +27,26 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
     private AdapterTypeConfig footAdapterTypeConfig;
 
     public MultiTypeBindingAdapter(Context context) {
-        super(context);
+        super(context, null);
+        init();
     }
 
     public MultiTypeBindingAdapter(Context context, List data) {
-        super(context);
-        if (data == null) {
-            data = new ArrayList();
-        }
-        init(data);
+        super(context, data);
+
+        init();
     }
 
     /**
      * @doc 单个item的viewType时使用
      */
     public MultiTypeBindingAdapter(Context context, List data, int itemDataRes) {
-        super(context);
-        if (data == null) {
-            data = new ArrayList();
-        }
-        init(data);
+        super(context, data);
+        init();
         multiTypeMap.put(ITEM_VIEW_NORMAL_TYPE, itemDataRes);
     }
 
-    private void init(List data) {
-        mData = data;
+    private void init() {
         multiTypeMap = new ArrayMap<>();
         multiTypeFootHolderMap = new ArrayMap<>();
         multiTypeHeadHolderMap = new ArrayMap<>();
@@ -124,7 +118,8 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         footDataList.addAll(config.getTypeConfigData());
     }
 
-    public void addSingleHeadConfig(int headKey, int headRes, Object headData) {
+    @Override
+    public void addSingleHeaderConfig(int headKey, int headRes, Object headData) {
         if (headDataList == null) {
             headDataList = new ArrayList();
         }
@@ -136,6 +131,7 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         multiTypeMap.put(headKey, headRes);
     }
 
+    @Override
     public void addSingleFootConfig(int footKey, int footRes, Object footData) {
         if (footDataList == null) {
             footDataList = new ArrayList();
@@ -158,6 +154,7 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
     public void setItemViewRes(int itemRes) {
         multiTypeMap.put(ITEM_VIEW_NORMAL_TYPE, itemRes);
     }
+
     @Override
     public boolean isHeaderView(int position) {
         if (headKeyList == null || headKeyList.size() == 0) {
@@ -169,6 +166,7 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         }
         return false;
     }
+
     @Override
     public boolean isFooterView(int position) {
         if (footKeyList == null || footKeyList.size() == 0) {
@@ -179,6 +177,7 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         int count = getHeadAndItemCount();
         return position >= count && position <= getItemCount();
     }
+
     @Override
     protected int getHeadAndItemCount() {
         int count = getHeadCount();
@@ -188,6 +187,7 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
         return count;
     }
 
+    @Override
     public int getHeadCount() {
 
         return headKeyList != null && headKeyList.size() != 0 ? headKeyList.size() : 0;
@@ -231,7 +231,7 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
                 headDecorator.decorator(holder, position, itemViewType, data);
             if (headPresenter != null)
                 binding.setVariable(BR.presenter, headPresenter);
-            multiTypeHeadHolderMap.put(itemViewType,holder);
+            multiTypeHeadHolderMap.put(itemViewType, holder);
         } else if (isFooterView(position)) {
             if (footDataList == null || footDataList.size() == 0) return;
             data = footDataList.get(position - getHeadAndItemCount());
@@ -303,8 +303,9 @@ public class MultiTypeBindingAdapter<T> extends BaseDataBindingAdapter<T> {
     public ArrayMap<Integer, BindingViewHolder> getMultiTypeFootHolderMap() {
         return multiTypeFootHolderMap;
     }
-    public <T> T  getMultiTypeFootHolder(int footResKey) {
-        if(!multiTypeFootHolderMap.containsKey(footResKey)){
+
+    public <T> T getMultiTypeFootHolder(int footResKey) {
+        if (!multiTypeFootHolderMap.containsKey(footResKey)) {
             return null;
         }
         return (T) multiTypeFootHolderMap.get(footResKey);

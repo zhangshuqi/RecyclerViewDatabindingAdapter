@@ -6,15 +6,24 @@ import java.util.List;
  * Created by Administrator on 2016/5/10 0010.
  */
 public interface RefreshableAdapter<T> {
-    public void refresh(List<T> newData);
+    void refresh(List<T> newData);
 
-    public void addAll(List<T> newData);
+    void refresh();
 
-    public void clear();
+    void addAll(List<T> newData);
 
-    public void delete(int position);
+    void addAllTop(List<T> newData);
 
-    public void add(T object);
+    void clear();
 
-    public void add(int position, T data);
+    void delete(int position);
+
+    void add(T object);
+
+
+    void add(int position, T data);
+
+    void addLast(T data);
+
+    void set(int position, T data);
 }
