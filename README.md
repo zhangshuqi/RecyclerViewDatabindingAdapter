@@ -14,7 +14,8 @@
 
   <pre>
   dependencies {
-	        compile 'com.github.zhangshuqi:RecyclerViewDatabindingAdapter:v1.0.2'
+	     implementation 'com.github.zhangshuqi:RecyclerViewDatabindingAdapter:V1.1'
+	
           }
      </pre>
 
