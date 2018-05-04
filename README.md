@@ -16,8 +16,8 @@
   dependencies {
 	     implementation 'com.github.zhangshuqi:RecyclerViewDatabindingAdapter:V1.1'
 	
-          }
-     </pre>
+        }
+   </pre> 
 
 
 ### 使用:
